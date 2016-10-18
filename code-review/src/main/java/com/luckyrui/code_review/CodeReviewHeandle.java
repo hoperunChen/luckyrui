@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
@@ -63,7 +64,61 @@ public class CodeReviewHeandle {
 		if (fileName.lastIndexOf(".java") < 0) {
 			return null;
 		}
-		//TODO 抽出去
+		rtn = new ArrayList<String>();
+		rtn.addAll(checkNotClose(file));
+		rtn.addAll(checkOutsideCreate(file));
+		return rtn;
+	}
+
+	private Collection<? extends String> checkOutsideCreate(File file) {
+		List<String> rtn = null;
+		BufferedReader reader = null;
+		try {
+			reader = new BufferedReader(new FileReader(file));
+			rtn = new ArrayList<String>(); // 错误内容
+			Stack<String> codeStack = new Stack<String>(); // 代码栈
+			String tempString = null; // 每行的内容
+			int line = 1; // 行号
+			// 一次读一行，读入null时文件结束
+			while ((tempString = reader.readLine()) != null) {
+				tempString = tempString.trim();
+
+				if (tempString.contains("try") && tempString.contains("{") && !tempString.contains("//")) {
+					// 有try 压栈
+					codeStack.push("line " + line + ": " + tempString);
+				}
+
+				if ((tempString.contains("MySQL.getConnection()")
+						|| tempString.contains("MySQL.getConnectionWithoutTran()")) && !tempString.contains("//")) {
+					// 有获取连接的代码,判断栈顶是不是try
+					if (!codeStack.isEmpty() && codeStack.peek().contains("try")) {
+						// 栈顶是try,出栈 try , 正确代码
+						codeStack.pop();
+					} else {
+						// 栈外创建链接,
+						rtn.add("连接在try外创建:" + "line " + line + ": " + tempString);
+					}
+				}
+				line++;
+			}
+			reader.close();
+			// 文件读完后如果栈内还有内容,那么栈内留下的内容都是在try外创建的连接
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (reader != null) {
+				try {
+					reader.close();
+				} catch (IOException e1) {
+				}
+			}
+		}
+		return rtn;
+
+	}
+
+	private List<String> checkNotClose(File file) {
+		List<String> rtn = null;
 		BufferedReader reader = null;
 		try {
 			reader = new BufferedReader(new FileReader(file));
@@ -75,8 +130,7 @@ public class CodeReviewHeandle {
 			while ((tempString = reader.readLine()) != null) {
 				tempString = tempString.trim();
 				if ((tempString.contains("MySQL.getConnection()")
-					|| tempString.contains("MySQL.getConnectionWithoutTran()")) 
-						&& !tempString.contains("//")
+						|| tempString.contains("MySQL.getConnectionWithoutTran()")) && !tempString.contains("//")
 						&& tempString.indexOf("//") < tempString.indexOf("MySQL.getConnection")) {
 					// 有获取连接的代码,压栈
 					codeStack.push("line " + line + ": " + tempString);
@@ -148,8 +202,12 @@ public class CodeReviewHeandle {
 	 * @param fileName
 	 */
 	private synchronized void outPutResult(File file, List<String> result) {
-		if(result != null && !result.isEmpty())
-		System.out.println(Thread.currentThread() + "result:{" + file.getPath() + "}" + result);
+		if (result != null && !result.isEmpty()) {
+			System.out.println(Thread.currentThread() + "result:{" + file.getPath() + "}");
+			for (String res : result) {
+				System.out.println("\t"+res);
+			}
+		}
 	}
 
 }
