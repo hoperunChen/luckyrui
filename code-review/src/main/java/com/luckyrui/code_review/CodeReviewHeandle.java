@@ -12,15 +12,40 @@ import java.util.Stack;
 
 import com.luckyrui.utils.FileUtil;
 
+/**
+ * 代码检查工具<br/>
+ * 1.检查未在finally中关闭的connection<br/>
+ * 2.检查未在try内创建的connection
+ * 
+ * @author chenrui
+ * @date 2016年10月18日上午10:26:21
+ * @version 201610
+ */
 public class CodeReviewHeandle {
 	private FileUtil fu = new FileUtil();
-
+	/**
+	 * 检查的根目录
+	 */
 	private String rootPath = null;
 
+	/**
+	 * 构造方法
+	 * 
+	 * @param rootPath
+	 */
 	public CodeReviewHeandle(String rootPath) {
 		this.rootPath = rootPath;
 	}
 
+	/**
+	 * 获取根目录下的所有文件,并且转换为迭代器
+	 * 
+	 * @return
+	 * @throws Exception
+	 * @author chenrui
+	 * @date 2016年10月18日 上午10:27:55
+	 * @version 201610
+	 */
 	private Iterator<File> getFiles() throws Exception {
 		List<File> _f = fu.getFiles(rootPath);
 		if (null != _f && _f.size() > 0) {
@@ -30,6 +55,14 @@ public class CodeReviewHeandle {
 		}
 	}
 
+	/**
+	 * 审查代码
+	 * 
+	 * @throws Exception
+	 * @author chenrui
+	 * @date 2016年10月18日 上午10:28:20
+	 * @version 201610
+	 */
 	public void reviewCode() throws Exception {
 		final Iterator<File> files = getFiles();
 		for (int i = 0; i < 2; i++) {
@@ -70,7 +103,16 @@ public class CodeReviewHeandle {
 		return rtn;
 	}
 
-	private Collection<? extends String> checkOutsideCreate(File file) {
+	/**
+	 * 检查在try外创建的connection
+	 * 
+	 * @param file
+	 * @return
+	 * @author chenrui
+	 * @date 2016年10月18日 上午10:29:15
+	 * @version 201610
+	 */
+	private List<String> checkOutsideCreate(File file) {
 		List<String> rtn = null;
 		BufferedReader reader = null;
 		try {
@@ -117,6 +159,15 @@ public class CodeReviewHeandle {
 
 	}
 
+	/**
+	 * 检查未在finally中关闭的connection
+	 * 
+	 * @param file
+	 * @return
+	 * @author chenrui
+	 * @date 2016年10月18日 上午10:29:42
+	 * @version 201610
+	 */
 	private List<String> checkNotClose(File file) {
 		List<String> rtn = null;
 		BufferedReader reader = null;
@@ -205,7 +256,7 @@ public class CodeReviewHeandle {
 		if (result != null && !result.isEmpty()) {
 			System.out.println(Thread.currentThread() + "result:{" + file.getPath() + "}");
 			for (String res : result) {
-				System.out.println("\t"+res);
+				System.out.println("\t" + res);
 			}
 		}
 	}
