@@ -125,9 +125,15 @@ public class CodeReviewHeandle {
 			while ((tempString = reader.readLine()) != null) {
 				tempString = tempString.trim();
 
-				if (tempString.contains("try") && tempString.contains("{") && !tempString.contains("//")) {
-					// 有try 压栈
-					codeStack.push("line " + line + ": " + tempString);
+				if (tempString.contains("try") && !tempString.contains("//")) {
+					// 栈顶是不是创建连接
+					if (!codeStack.isEmpty() && (codeStack.peek().contains("MySQL.getConnection()")
+							|| codeStack.peek().contains("MySQL.getConnectionWithoutTran()"))) {
+						codeStack.pop();
+					} else {
+						// 有try 压栈
+						codeStack.push("line " + line + ": " + tempString);
+					}
 				}
 
 				if ((tempString.contains("MySQL.getConnection()")
@@ -139,6 +145,7 @@ public class CodeReviewHeandle {
 					} else {
 						// 栈外创建链接,
 						rtn.add("连接在try外创建:" + "line " + line + ": " + tempString);
+						codeStack.push("line " + line + ": " + tempString);
 					}
 				}
 				line++;
