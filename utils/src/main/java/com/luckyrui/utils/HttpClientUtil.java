@@ -195,7 +195,6 @@ public class HttpClientUtil {
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == 200) {
 			body = EntityUtils.toString(entity);
-			logger.info(body);
 			EntityUtils.consume(entity);
 		} else {
 			throw new HttpClientException(statusCode);
