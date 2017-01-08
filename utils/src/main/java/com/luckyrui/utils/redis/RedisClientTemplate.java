@@ -6,10 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import com.luckyrui.utils.SerializationUtil;
 
 import redis.clients.jedis.BinaryClient.LIST_POSITION;
 import redis.clients.jedis.Jedis;
@@ -30,7 +29,7 @@ import sun.misc.BASE64Encoder;
  */
 public class RedisClientTemplate {
 
-	private static Log log = LogFactory.getLog(RedisDataSourceImpl.class);
+	private static Log log = LogFactory.getLog(RedisClientTemplate.class);
 
 	private RedisDataSource redisDataSource;
 
@@ -118,7 +117,7 @@ public class RedisClientTemplate {
 			return result;
 		}
 		try {
-			byte[] s = SerializationUtil.serialize(value);
+			byte[] s = SerializationUtils.serialize(value);
 			result = shardedJedis.set(key, encode.encode(s));
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -146,7 +145,7 @@ public class RedisClientTemplate {
 		}
 		try {
 			String value = shardedJedis.get(key);
-			result = (Serializable) SerializationUtil.deserialize(decode.decodeBuffer(value));
+			result = (Serializable) SerializationUtils.deserialize(decode.decodeBuffer(value));
 		} catch (Exception e) {
 			e.printStackTrace();
 			log.error(e.getMessage(), e);
